@@ -8,7 +8,6 @@ terraform {
     region               = "ap-northeast-1"
     # state be stored to {bucket}/{workspace_key_prefix}/{terraform.workspace}/{key}
     bucket               = "deploy-047980477351-ap-northeast-1-efg.river"
-    dynamodb_table       = "deploy-047980477351-ap-northeast-1-efg.river"
     workspace_key_prefix = "portfolio-2020"
 
     key = "components/portfolio-2020-tasks/terraform.tfstate"
@@ -43,13 +42,15 @@ locals {
   # Common tags to be assigned to all resources
   default_attributes = {
     cluster_arn = aws_ecs_cluster.task_cluster.arn
-    private_subnets = module.vpc.private_subnets
-    awslogs_group = aws_cloudwatch_log_group.log_group.arn
-    image_repository_url = "efgriver/ex-awsconf:latest"
+    subnets = module.vpc.public_subnets
+    awslogs_group = aws_cloudwatch_log_group.log_group.name
+    image_repository_url = "efgriver/ex-awsconf"
+    image_tag = "latest"
     cpu_units = 256 # see Task CPU and Memory https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html 
     memory_mib = 1024 # see Task CPU and Memory https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html
     is_enabled = true # please set false only-if expected to stop the task in temporary. 
     cost_tag_env = terraform.workspace
+    firebase_function_url = ""
     fargate_platform_version = "1.3.0" # FARGATE platform version https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html
   } 
 }
@@ -60,7 +61,7 @@ module "test" {
   attributes = merge(local.default_attributes, {
     task_name = "test", # task name
     schedule_expression = "cron(0/15 * * * ? *)", # https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/events/ScheduledEvents.html
-    task_command = [ "ex-awsconf" ], https://docs.docker.com/engine/reference/builder/#cmd
+    task_command = [ "ls -la" ], # https://docs.docker.com/engine/reference/builder/#cmd
     is_enabled = true
   })
 }

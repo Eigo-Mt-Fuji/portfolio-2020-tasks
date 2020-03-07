@@ -3,14 +3,14 @@
 resource "aws_cloudwatch_event_rule" "event_rule" {
   name                = "cloudwatch_event_rule-${var.attributes.task_name}-${terraform.workspace}"
   description         = "cloudwatch_event_rule-${var.attributes.task_name}-${terraform.workspace}"
-  schedule_expression = "${var.attributes.schedule_expression}"
+  schedule_expression = var.attributes.schedule_expression
   is_enabled = var.attributes.is_enabled # https://www.terraform.io/docs/providers/aws/r/cloudwatch_event_rule.html#is_enabled
 }
 
 resource "aws_cloudwatch_event_target" "event_target" {
-  arn       = "${var.attributes.cluster_arn}" # ecs cluster arn
-  rule      = "${aws_cloudwatch_event_rule.event_rule.name}" # cloud watch event rule
-  role_arn  = "${aws_iam_role.ecs_event.arn}" # IAM role for allowing cloud watch event to run ECS task
+  arn       = var.attributes.cluster_arn # ecs cluster arn
+  rule      = aws_cloudwatch_event_rule.event_rule.name # cloud watch event rule
+  role_arn  = aws_iam_role.ecs_event.arn # IAM role for allowing cloud watch event to run ECS task
 
   # see ecs_target https://www.terraform.io/docs/providers/aws/r/cloudwatch_event_target.html
   ecs_target {
@@ -18,10 +18,10 @@ resource "aws_cloudwatch_event_target" "event_target" {
     task_count = 1 
 
     launch_type = "FARGATE"
-    platform_version = "${var.attributes.fargate_platform_version}" # used only if LaunchType is FARGATE https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html
+    platform_version = var.attributes.fargate_platform_version # used only if LaunchType is FARGATE https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html
     
     network_configuration {
-        subnets = var.attributes.private_subnets
+        subnets = var.attributes.subnets
         assign_public_ip = false
     }
   }
@@ -54,7 +54,7 @@ resource "aws_ecs_task_definition" "task" {
       "environment":[
         {
           "name": "FIREBASE_FUNCTION_URL",
-          "value": var.attributes.firebase_function_url
+          "value": "${var.attributes.firebase_function_url}"
         }
       ]
     } 
@@ -77,7 +77,7 @@ resource "aws_iam_role" "ecs_event" {
 
 resource "aws_iam_role_policy" "ecs_event_policy" {
   name = "ecs_event_role_policy-${var.attributes.task_name}-${terraform.workspace}"
-  role = "${aws_iam_role.ecs_event.id}"
+  role = aws_iam_role.ecs_event.id
 
   policy = templatefile("${path.module}/templates/ecs-event-run-task-policy.json", {})
 }
@@ -91,12 +91,12 @@ resource "aws_iam_role" "execution_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "execution_role_policy" {
-  role = "${aws_iam_role.execution_role.name}"
+  role = aws_iam_role.execution_role.name
 
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 resource "aws_iam_role_policy_attachment" "execution_role_ssm_readonly_policy" {
-  role = "${aws_iam_role.execution_role.name}"
+  role = aws_iam_role.execution_role.name
 
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
 }
@@ -112,7 +112,7 @@ resource "aws_iam_role" "task_role" {
 
 resource "aws_iam_role_policy" "task_role_policy" {
   name = "task_role_policy-${var.attributes.task_name}-${terraform.workspace}"
-  role = "${aws_iam_role.task_role.id}"
+  role = aws_iam_role.task_role.id
 
   policy = templatefile("${path.module}/templates/ecs-task-role-policy.json", {})
 }

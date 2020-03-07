@@ -2,20 +2,20 @@
 
 **TODO: Add description**
 
-## Installation
+## 使い方
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `portfolio_tasks` to your list of dependencies in `mix.exs`:
+### インフラ
 
-```elixir
-def deps do
-  [
-    {:portfolio_tasks, "~> 0.1.0"}
-  ]
-end
+|:環境:|:手順:|
+|:----:|:----:|
+|dev|[こちら](#dev環境インフラ更新手順)|
+
+### dev環境インフラ更新手順
+
+```bash
+export AWS_PROFILE=efgriver
+cd terraform/
+terraform init -backend=true
+terraform plan -out=terraform.plan 
+terraform apply "terraform.plan"
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/portfolio_tasks](https://hexdocs.pm/portfolio_tasks).
-
